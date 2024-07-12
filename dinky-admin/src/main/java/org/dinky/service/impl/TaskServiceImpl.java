@@ -19,6 +19,7 @@
 
 package org.dinky.service.impl;
 
+import cn.hutool.core.lang.UUID;
 import org.dinky.assertion.Asserts;
 import org.dinky.assertion.DinkyAssert;
 import org.dinky.config.Dialect;
@@ -204,7 +205,8 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
         } else {
             jobResult = BaseTask.getTask(task).execute();
         }
-        log.info("execute job finished,status is {}", jobResult.getStatus());
+        log.info("execute job【{}】, maxRowNum {}", task.getId(), task.getMaxRowNum());
+        log.info("execute job【{}】 finished,status is {}", task.getId(), jobResult.getStatus());
         return jobResult;
     }
 
@@ -319,6 +321,10 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
         TaskDTO taskDTO = taskServiceBean.prepareTask(submitDto);
         // The statement set is enabled by default when submitting assignments
         taskDTO.setStatementSet(true);
+//        String sql = taskDTO.getStatement();
+//        UUID uuid = UUID.randomUUID();
+//        sql = sql.replace("'sink.label-prefix' = 'uuid'","'sink.label-prefix' = '"+uuid+"'");
+//        taskDTO.setStatement(sql);
         JobResult jobResult = taskServiceBean.executeJob(taskDTO);
         if ((jobResult.getStatus() == Job.JobStatus.FAILED)) {
             throw new RuntimeException(jobResult.getError());
@@ -338,6 +344,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
         task.setUseResult(true);
         // Debug mode need execute
         task.setStatementSet(false);
+        task.setMaxRowNum(5000);
         // mode check
         if (GatewayType.get(task.getType()).isDeployCluster()) {
             throw new BusException(Status.MODE_IS_NOT_ALLOW_SELECT.getMessage());
@@ -600,7 +607,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean saveOrUpdateTask(Task task) {
+    public Integer saveOrUpdateTask(Task task) {
         Task byId = getById(task.getId());
         if (byId != null && JobLifeCycle.PUBLISH.equalsValue(byId.getStep())) {
             throw new BusException(Status.TASK_IS_ONLINE.getMessage());
@@ -647,7 +654,8 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
             }
         }
 
-        return this.saveOrUpdate(task);
+        this.saveOrUpdate(task);
+        return task.getId();
     }
 
     @Override

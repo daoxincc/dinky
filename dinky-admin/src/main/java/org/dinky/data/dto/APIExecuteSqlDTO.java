@@ -89,9 +89,9 @@ public class APIExecuteSqlDTO extends AbstractStatementDTO {
     @ApiModelProperty(
             value = "Max Row Number",
             dataType = "Integer",
-            example = "100",
+            example = "5000",
             notes = "The maximum number of rows")
-    private Integer maxRowNum = 100;
+    private Integer maxRowNum = 5000;
 
     @ApiModelProperty(value = "Checkpoint", dataType = "Integer", example = "0", notes = "The checkpoint configuration")
     private Integer checkPoint = 0;

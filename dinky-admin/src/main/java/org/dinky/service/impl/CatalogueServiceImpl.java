@@ -532,11 +532,12 @@ public class CatalogueServiceImpl extends SuperServiceImpl<CatalogueMapper, Cata
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean saveOrUpdateOrRename(Catalogue catalogue) {
+    public Integer saveOrUpdateOrRename(Catalogue catalogue) {
         if (taskService.getById(catalogue.getTaskId()) != null) {
             toRename(catalogue);
         }
-        return saveOrUpdate(catalogue);
+        saveOrUpdate(catalogue);
+        return catalogue.getId();
     }
 
     private CatalogueTaskDTO getCatalogueTaskDTO(String name, Integer parentId) {

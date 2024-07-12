@@ -130,7 +130,7 @@ public interface CatalogueService extends ISuperService<Catalogue> {
      * @param catalogue A {@link Catalogue} object representing the catalogue to save, update, or rename.
      * @return A boolean value indicating whether the operation was successful.
      */
-    Boolean saveOrUpdateOrRename(Catalogue catalogue);
+    Integer saveOrUpdateOrRename(Catalogue catalogue);
 
     /**
      * Check if the catalogue task name is exist

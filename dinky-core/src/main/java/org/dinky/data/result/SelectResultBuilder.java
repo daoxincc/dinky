@@ -38,7 +38,7 @@ public class SelectResultBuilder extends AbstractResultBuilder implements Result
     public SelectResultBuilder(
             String id, Integer maxRowNum, boolean isChangeLog, boolean isAutoCancel, String timeZone) {
         this.id = id;
-        this.maxRowNum = Asserts.isNotNull(maxRowNum) ? maxRowNum : 100;
+        this.maxRowNum = Asserts.isNotNull(maxRowNum) ? maxRowNum : 1000;
         this.isChangeLog = isChangeLog;
         this.isAutoCancel = isAutoCancel;
         this.timeZone = timeZone;

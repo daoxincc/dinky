@@ -173,7 +173,7 @@ public interface TaskService extends ISuperService<Task> {
      * @param task The {@link Task} object representing the task to save or update.
      * @return true if the task is successfully saved or updated, false otherwise.
      */
-    boolean saveOrUpdateTask(Task task);
+    Integer saveOrUpdateTask(Task task);
 
     /**
      * Get a list of all Flink SQL environments.

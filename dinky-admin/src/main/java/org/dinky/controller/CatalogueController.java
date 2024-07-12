@@ -115,9 +115,10 @@ public class CatalogueController {
             required = true,
             dataType = "Catalogue",
             dataTypeClass = Catalogue.class)
-    public Result<Void> saveOrUpdateCatalogue(@RequestBody Catalogue catalogue) {
-        if (catalogueService.saveOrUpdateOrRename(catalogue)) {
-            return Result.succeed(Status.SAVE_SUCCESS);
+    public Result<Integer> saveOrUpdateCatalogue(@RequestBody Catalogue catalogue) {
+        Integer id = catalogueService.saveOrUpdateOrRename(catalogue);
+        if (id != null) {
+            return Result.succeed(id, Status.SAVE_SUCCESS);
         } else {
             return Result.failed(Status.SAVE_FAILED);
         }

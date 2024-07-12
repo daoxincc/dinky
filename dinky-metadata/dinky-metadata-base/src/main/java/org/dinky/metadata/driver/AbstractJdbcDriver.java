@@ -555,7 +555,7 @@ public abstract class AbstractJdbcDriver extends AbstractDriver<AbstractJdbcConf
     @Override
     public JdbcSelectResult query(String sql, Integer limit) {
         if (Asserts.isNull(limit)) {
-            limit = 100;
+            limit = 1000;
         }
         JdbcSelectResult result = new JdbcSelectResult();
         List<LinkedHashMap<String, Object>> datas = new ArrayList<>();

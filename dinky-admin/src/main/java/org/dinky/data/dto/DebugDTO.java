@@ -59,7 +59,7 @@ public class DebugDTO {
     @ApiModelProperty(
             value = "Max Row Number",
             dataType = "Integer",
-            example = "1000",
+            example = "5000",
             notes = "The maximum number of rows to preview")
-    private Integer maxRowNum = 1000;
+    private Integer maxRowNum = 5000;
 }

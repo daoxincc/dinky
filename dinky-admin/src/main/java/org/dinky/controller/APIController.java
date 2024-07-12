@@ -19,6 +19,8 @@
 
 package org.dinky.controller;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import org.dinky.DinkyVersion;
 import org.dinky.data.annotations.Log;
 import org.dinky.data.dto.APISavePointTaskDTO;
@@ -35,15 +37,14 @@ import org.dinky.gateway.result.SavePointResult;
 import org.dinky.job.JobResult;
 import org.dinky.service.JobInstanceService;
 import org.dinky.service.TaskService;
+import org.dinky.service.impl.TaskServiceImpl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.ApplicationContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -52,6 +53,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * APIController
@@ -66,6 +68,7 @@ public class APIController {
 
     private final TaskService taskService;
     private final JobInstanceService jobInstanceService;
+    private final ApplicationContext applicationContext;
 
     @GetMapping("/version")
     @ApiOperation(value = "Query Service Version", notes = "Query Dinky Service Version Number")
@@ -201,5 +204,56 @@ public class APIController {
     public Result getTaskLineage(@RequestParam Integer id) {
         taskService.initTenantByTaskId(id);
         return Result.succeed(taskService.getTaskLineage(id), Status.QUERY_SUCCESS);
+    }
+
+    @PostMapping("/executeSqlEx3/{id}")
+    @ApiOperation("自定义查询SQL")
+    @Log(title = "Get execute data", businessType = BusinessType.OTHER)
+    @ApiImplicitParam(
+            name = "id",
+            value = "Task Id",
+            required = true,
+            dataType = "Integer",
+            paramType = "query",
+            dataTypeClass = Integer.class)
+    public Result executeSqlEx3(@PathVariable Integer id, @RequestBody Map<String, String> paramMap) throws Exception {
+        taskService.initTenantByTaskId(id);
+        TaskDTO task = taskService.getTaskInfoById(id);
+        task.setUseResult(true);
+        task.setStatementSet(false);
+        String sql = task.getStatement();
+
+        // 处理#{}变量
+        Pattern pattern = Pattern.compile("#\\{(.+?)\\}");
+        Matcher matcher = pattern.matcher(sql);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            String value = StrUtil.isNotEmpty(paramMap.get(key)) ? "'" + paramMap.get(key) + "'" : "null";
+            sql = sql.replace("#{" + key + "}", value);
+        }
+
+        // 处理${}变量
+        Pattern pattern1 = Pattern.compile("\\$\\{(.+?)\\}");
+        Matcher matcher1 = pattern1.matcher(sql);
+        while (matcher1.find()) {
+            String key = matcher1.group(1);
+            String value = StrUtil.isNotEmpty(paramMap.get(key)) ? paramMap.get(key) : "null";
+            sql = sql.replace("${" + key + "}", value);
+        }
+
+        String offset = paramMap.get("offset");
+        if (ObjectUtil.isEmpty(offset)) {
+            offset = "0";
+        }
+        if (ObjectUtil.isNotEmpty(paramMap.get("limit"))) {
+            task.setStatement(sql + " LIMIT " + paramMap.get("limit") + " OFFSET " + offset);
+        } else {
+            task.setStatement(sql);
+        }
+
+        task.setMaxRowNum(5000);
+        TaskServiceImpl taskServiceBean = applicationContext.getBean(TaskServiceImpl.class);
+        JobResult jobResult = taskServiceBean.executeJob(task, true);
+        return Result.succeed(jobResult, "获取成功");
     }
 }

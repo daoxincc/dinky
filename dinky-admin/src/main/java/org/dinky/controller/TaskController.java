@@ -180,9 +180,10 @@ public class TaskController {
             dataType = "TaskSaveDTO",
             paramType = "body",
             dataTypeClass = TaskSaveDTO.class)
-    public Result<Void> saveOrUpdateTask(@RequestBody TaskSaveDTO task) {
-        if (taskService.saveOrUpdateTask(task.toTaskEntity())) {
-            return Result.succeed(Status.SAVE_SUCCESS);
+    public Result<Integer> saveOrUpdateTask(@RequestBody TaskSaveDTO task) {
+        Integer taskId = taskService.saveOrUpdateTask(task.toTaskEntity());
+        if (taskId != null) {
+            return Result.succeed(taskId, Status.SAVE_SUCCESS);
         } else {
             return Result.failed(Status.SAVE_FAILED);
         }

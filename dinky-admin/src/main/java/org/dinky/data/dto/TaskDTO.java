@@ -211,9 +211,9 @@ public class TaskDTO extends AbstractStatementDTO {
     @ApiModelProperty(
             value = "Max Row Number",
             dataType = "Integer",
-            example = "100",
+            example = "5000",
             notes = "The maximum number of rows to return")
-    private Integer maxRowNum = 100;
+    private Integer maxRowNum = 5000;
 
     public JobConfig getJobConfig() {
 
