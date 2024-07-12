@@ -19,6 +19,7 @@
 
 package org.dinky.service.task;
 
+import cn.hutool.core.collection.CollectionUtil;
 import org.dinky.config.Dialect;
 import org.dinky.data.annotations.SupportDialect;
 import org.dinky.data.dto.TaskDTO;
@@ -28,6 +29,8 @@ import org.dinky.job.JobResult;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -39,6 +42,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public abstract class BaseTask {
     final TaskDTO task;
+
+    static final ConcurrentMap<String, Set<Class<?>>> CLASS_MAP = new ConcurrentHashMap<>();
 
     public abstract JobResult execute() throws Exception;
 
@@ -57,8 +62,16 @@ public abstract class BaseTask {
     }
 
     public static BaseTask getTask(TaskDTO taskDTO) {
-        Set<Class<?>> classes =
-                ClassUtil.scanPackageBySuper(BaseTask.class.getPackage().getName(), BaseTask.class);
+
+        // ljx 修改问题zip file closed--start
+        String packageName = BaseTask.class.getPackage().getName();
+        Set<Class<?>> classes = CLASS_MAP.get(packageName);
+        if(CollectionUtil.isEmpty(classes)){
+            classes = ClassUtil.scanPackageBySuper(packageName, BaseTask.class);
+            CLASS_MAP.put(packageName, classes);
+        }
+        // ljx 修改问题zip file closed--end
+
         for (Class<?> clazz : classes) {
             SupportDialect annotation = clazz.getAnnotation(SupportDialect.class);
             if (annotation != null) {
